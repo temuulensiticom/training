@@ -44,9 +44,9 @@ namespace loginform.Pages
             {
                 user = await _userRepository.GetByUsernameAsync(Input.Username.Trim());
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
-                ModelState.AddModelError(string.Empty, "Cannot connect to MySQL on localhost:3306. Check that MySQL is running and the root password is correct.");
+                ModelState.AddModelError(string.Empty, $"Cannot connect to MySQL. Driver message: {ex.Message}");
                 return Page();
             }
 

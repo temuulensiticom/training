@@ -16,6 +16,8 @@ The `loginform` project is an ASP.NET Core Razor Pages app with MySQL login.
 
 3. Start MySQL, then run the app from `loginform`.
 
+If running with the Visual Studio Docker profile, the app uses `host.docker.internal:3306` because `localhost` inside Docker is the container, not the Windows host.
+
 On first startup the app creates the `loginform` database, creates the `users` table, and inserts 17 mock accounts.
 
 - Admin users: `admin`, `admin2`

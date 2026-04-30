@@ -23,6 +23,7 @@
       "launchBrowser": true,
       "launchUrl": "http://{ServiceHost}:{ServicePort}",
       "environmentVariables": {
+        "ConnectionStrings__DefaultConnection": "Server=host.docker.internal;Port=3306;Database=loginform;User ID=root;Password=@passmysql;ConnectionProtocol=Tcp;SslMode=None;Connection Timeout=10;",
         "ASPNETCORE_HTTP_PORTS": "8080"
       },
       "publishAllPorts": true,
