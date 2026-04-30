@@ -20,12 +20,6 @@ builder.Services.AddScoped<IUserRepository, MySqlUserRepository>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-    await userRepository.EnsureCreatedAsync();
-}
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using MySqlConnector;
 
 namespace loginform.Pages
 {
@@ -38,7 +39,17 @@ namespace loginform.Pages
                 return Page();
             }
 
-            var user = await _userRepository.GetByUsernameAsync(Input.Username.Trim());
+            AppUser? user;
+            try
+            {
+                user = await _userRepository.GetByUsernameAsync(Input.Username.Trim());
+            }
+            catch (MySqlException)
+            {
+                ModelState.AddModelError(string.Empty, "Cannot connect to MySQL on localhost:3306. Check that MySQL is running and the root password is correct.");
+                return Page();
+            }
+
             if (user is null || !user.IsActive || !_passwordHashService.VerifyPassword(Input.Password, user.PasswordHash))
             {
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");

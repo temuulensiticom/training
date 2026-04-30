@@ -6,10 +6,37 @@ namespace loginform.Data;
 
 public sealed class MySqlUserRepository(IConfiguration configuration, PasswordHashService passwordHashService) : IUserRepository
 {
+    private static readonly SemaphoreSlim InitializationLock = new(1, 1);
+    private static bool _isInitialized;
+
     private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection.");
 
     public async Task EnsureCreatedAsync()
+    {
+        if (_isInitialized)
+        {
+            return;
+        }
+
+        await InitializationLock.WaitAsync();
+        try
+        {
+            if (_isInitialized)
+            {
+                return;
+            }
+
+            await EnsureCreatedCoreAsync();
+            _isInitialized = true;
+        }
+        finally
+        {
+            InitializationLock.Release();
+        }
+    }
+
+    private async Task EnsureCreatedCoreAsync()
     {
         await EnsureDatabaseCreatedAsync();
 
@@ -114,6 +141,8 @@ public sealed class MySqlUserRepository(IConfiguration configuration, PasswordHa
 
     public async Task<AppUser?> GetByUsernameAsync(string username)
     {
+        await EnsureCreatedAsync();
+
         await using var connection = new MySqlConnection(_connectionString);
         await connection.OpenAsync();
 
@@ -132,6 +161,8 @@ public sealed class MySqlUserRepository(IConfiguration configuration, PasswordHa
 
     public async Task<AppUser?> GetByIdAsync(int id)
     {
+        await EnsureCreatedAsync();
+
         await using var connection = new MySqlConnection(_connectionString);
         await connection.OpenAsync();
 
@@ -150,6 +181,8 @@ public sealed class MySqlUserRepository(IConfiguration configuration, PasswordHa
 
     public async Task<IReadOnlyList<AppUser>> GetAllAsync()
     {
+        await EnsureCreatedAsync();
+
         var users = new List<AppUser>();
 
         await using var connection = new MySqlConnection(_connectionString);
@@ -173,6 +206,8 @@ public sealed class MySqlUserRepository(IConfiguration configuration, PasswordHa
 
     public async Task CreateAsync(AppUser user)
     {
+        await EnsureCreatedAsync();
+
         await using var connection = new MySqlConnection(_connectionString);
         await connection.OpenAsync();
 
@@ -188,6 +223,8 @@ public sealed class MySqlUserRepository(IConfiguration configuration, PasswordHa
 
     public async Task UpdateAsync(AppUser user, string? newPasswordHash)
     {
+        await EnsureCreatedAsync();
+
         await using var connection = new MySqlConnection(_connectionString);
         await connection.OpenAsync();
 

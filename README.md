@@ -10,7 +10,7 @@ The `loginform` project is an ASP.NET Core Razor Pages app with MySQL login.
 
 ```json
 "ConnectionStrings": {
-  "DefaultConnection": "Server=127.0.0.1;Port=3306;Database=loginform;User ID=root;Password=@passmysql;Connection Timeout=10;"
+  "DefaultConnection": "Server=localhost;Port=3306;Database=loginform;User ID=root;Password=@passmysql;ConnectionProtocol=Tcp;SslMode=None;Connection Timeout=10;"
 }
 ```
 
