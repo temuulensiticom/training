@@ -32,8 +32,6 @@ public partial class Program
             app.UseHsts();
         }
 
-        app.UseHttpsRedirection();
-
         app.UseRouting();
 
         app.UseAuthentication();
