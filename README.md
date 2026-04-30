@@ -23,7 +23,7 @@ On first startup the app creates the `loginform` database, creates the `users` t
 - Standard users: `standard1` through `standard15`
 - Standard password: `User@123`
 
-Admin users can view, add, and edit all users. Standard users are sent to a welcome page that shows their first name from the database.
+Admin users can view, add, and edit all users. New visitors can sign up as standard users. Standard users are sent to a welcome page that shows their first name from the database.
 
 
 
