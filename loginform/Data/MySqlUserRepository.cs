@@ -35,31 +35,58 @@ public sealed class MySqlUserRepository(IConfiguration configuration, PasswordHa
             await command.ExecuteNonQueryAsync();
         }
 
-        await using (var countCommand = connection.CreateCommand())
+        var seedUsers = GetSeedUsers();
+        foreach (var seedUser in seedUsers)
         {
-            countCommand.CommandText = "SELECT COUNT(*) FROM users;";
-            var count = Convert.ToInt32(await countCommand.ExecuteScalarAsync());
-            if (count > 0)
-            {
-                return;
-            }
-        }
-
-        await using (var seedCommand = connection.CreateCommand())
-        {
+            await using var seedCommand = connection.CreateCommand();
             seedCommand.CommandText = """
                 INSERT INTO users (username, password_hash, first_name, last_name, email, role, is_active)
-                VALUES (@username, @password_hash, @first_name, @last_name, @email, @role, 1);
+                VALUES (@username, @password_hash, @first_name, @last_name, @email, @role, @is_active)
+                ON DUPLICATE KEY UPDATE username = username;
                 """;
-            seedCommand.Parameters.AddWithValue("@username", "admin");
-            seedCommand.Parameters.AddWithValue("@password_hash", passwordHashService.HashPassword("Admin@123"));
-            seedCommand.Parameters.AddWithValue("@first_name", "Admin");
-            seedCommand.Parameters.AddWithValue("@last_name", "User");
-            seedCommand.Parameters.AddWithValue("@email", "admin@example.com");
-            seedCommand.Parameters.AddWithValue("@role", UserRoles.Admin);
+            seedCommand.Parameters.AddWithValue("@username", seedUser.Username);
+            seedCommand.Parameters.AddWithValue("@password_hash", passwordHashService.HashPassword(seedUser.Password));
+            seedCommand.Parameters.AddWithValue("@first_name", seedUser.FirstName);
+            seedCommand.Parameters.AddWithValue("@last_name", seedUser.LastName);
+            seedCommand.Parameters.AddWithValue("@email", seedUser.Email);
+            seedCommand.Parameters.AddWithValue("@role", seedUser.Role);
+            seedCommand.Parameters.AddWithValue("@is_active", seedUser.IsActive);
             await seedCommand.ExecuteNonQueryAsync();
         }
     }
+
+    private static IReadOnlyList<SeedUser> GetSeedUsers()
+    {
+        return
+        [
+            new("admin", "Admin@123", "Admin", "User", "admin@example.com", UserRoles.Admin),
+            new("admin2", "Admin@123", "Second", "Admin", "admin2@example.com", UserRoles.Admin),
+            new("standard1", "User@123", "Ariun", "Bold", "standard1@example.com", UserRoles.Standard),
+            new("standard2", "User@123", "Bat", "Erdene", "standard2@example.com", UserRoles.Standard),
+            new("standard3", "User@123", "Bayar", "Suren", "standard3@example.com", UserRoles.Standard),
+            new("standard4", "User@123", "Bilegt", "Gan", "standard4@example.com", UserRoles.Standard),
+            new("standard5", "User@123", "Chin", "Zorig", "standard5@example.com", UserRoles.Standard),
+            new("standard6", "User@123", "Davaa", "Tugs", "standard6@example.com", UserRoles.Standard),
+            new("standard7", "User@123", "Enkh", "Munkh", "standard7@example.com", UserRoles.Standard),
+            new("standard8", "User@123", "Ganzorig", "Dorj", "standard8@example.com", UserRoles.Standard),
+            new("standard9", "User@123", "Khulan", "Baatar", "standard9@example.com", UserRoles.Standard),
+            new("standard10", "User@123", "Maral", "Temuulen", "standard10@example.com", UserRoles.Standard),
+            new("standard11", "User@123", "Naran", "Altan", "standard11@example.com", UserRoles.Standard),
+            new("standard12", "User@123", "Oyun", "Sukh", "standard12@example.com", UserRoles.Standard),
+            new("standard13", "User@123", "Saruul", "Purev", "standard13@example.com", UserRoles.Standard),
+            new("standard14", "User@123", "Temuujin", "Erkhes", "standard14@example.com", UserRoles.Standard),
+            new("standard15", "User@123", "Tselmeg", "Nomun", "standard15@example.com", UserRoles.Standard)
+        ];
+    }
+
+    private sealed record SeedUser(
+        string Username,
+        string Password,
+        string FirstName,
+        string LastName,
+        string Email,
+        string Role,
+        bool IsActive = true);
 
     private async Task EnsureDatabaseCreatedAsync()
     {

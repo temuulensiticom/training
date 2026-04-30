@@ -10,15 +10,17 @@ The `loginform` project is an ASP.NET Core Razor Pages app with MySQL login.
 
 ```json
 "ConnectionStrings": {
-  "DefaultConnection": "Server=localhost;Port=3306;Database=loginform;User ID=root;Password=your_mysql_password;"
+  "DefaultConnection": "Server=127.0.0.1;Port=3306;Database=loginform;User ID=root;Password=@passmysql;Connection Timeout=10;"
 }
 ```
 
 3. Start MySQL, then run the app from `loginform`.
 
-On first startup the app creates the `loginform` database, creates the `users` table, and inserts one admin account:
+On first startup the app creates the `loginform` database, creates the `users` table, and inserts 17 mock accounts.
 
-- Username: `admin`
-- Password: `Admin@123`
+- Admin users: `admin`, `admin2`
+- Admin password: `Admin@123`
+- Standard users: `standard1` through `standard15`
+- Standard password: `User@123`
 
 Admin users can view, add, and edit all users. Standard users are sent to a welcome page that shows their first name from the database.
