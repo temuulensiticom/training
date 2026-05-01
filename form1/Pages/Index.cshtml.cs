@@ -17,38 +17,55 @@ namespace form.Pages
             _logger = logger;
         }
 
-        // Properties for display
-        public bool Database1Connected { get; set; }
-        public bool Database2Connected { get; set; }
+        public List<DatabaseTargetStatus> ConfiguredDatabases { get; set; } = new();
+        public List<DatabaseTargetStatus> CustomDatabases { get; set; } = new();
         public string Message { get; set; } = "";
         public bool HasError { get; set; }
         public bool IsDuplicate { get; set; }
         public string DuplicateMessage { get; set; } = "";
-        public DatabaseExecutionResult? Database1Results { get; set; }
-        public DatabaseExecutionResult? Database2Results { get; set; }
+        public List<DatabaseExecutionResult> DatabaseResults { get; set; } = new();
 
         public async Task OnGetAsync()
         {
-            // Check database connections on page load
-            Database1Connected = await _databaseService.TestConnectionAsync(1);
-            Database2Connected = await _databaseService.TestConnectionAsync(2);
+            await LoadConfiguredDatabaseStatusesAsync();
         }
 
-        public async Task OnPostAsync(IFormFile? fileUpload, bool executeOnDb1, bool executeOnDb2)
+        public async Task OnPostAsync(
+            IFormFile? fileUpload,
+            string[] selectedConnectionNames,
+            string[] customDisplayName,
+            string[] customHost,
+            int[] customPort,
+            string[] customDatabase,
+            string[] customUser,
+            string[] customPassword)
         {
-            // Check database connections
-            Database1Connected = await _databaseService.TestConnectionAsync(1);
-            Database2Connected = await _databaseService.TestConnectionAsync(2);
+            await LoadConfiguredDatabaseStatusesAsync();
 
-            // Validate that at least one database is selected
-            if (!executeOnDb1 && !executeOnDb2)
+            var selectedTargets = ConfiguredDatabases
+                .Where(status => selectedConnectionNames.Contains(status.Target.Key))
+                .Select(status => status.Target)
+                .ToList();
+
+            var customTargets = BuildCustomTargets(customDisplayName, customHost, customPort, customDatabase, customUser, customPassword);
+            foreach (var target in customTargets)
+            {
+                var connected = await _databaseService.TestConnectionAsync(target.ConnectionString);
+                CustomDatabases.Add(new DatabaseTargetStatus { Target = target, Connected = connected });
+
+                if (connected)
+                {
+                    selectedTargets.Add(target);
+                }
+            }
+
+            if (selectedTargets.Count == 0)
             {
                 HasError = true;
-                Message = "Please select at least one database to execute queries on.";
+                Message = "Please select at least one connected database to execute queries on.";
                 return;
             }
 
-            // Validate file upload
             if (fileUpload == null || fileUpload.Length == 0)
             {
                 HasError = true;
@@ -58,7 +75,6 @@ namespace form.Pages
 
             try
             {
-                // Upload and read file
                 var fileResult = await _fileUploadService.UploadAndReadFileAsync(fileUpload);
 
                 if (fileResult.HasError)
@@ -68,42 +84,20 @@ namespace form.Pages
                     return;
                 }
 
-                // Check for duplicate
                 if (fileResult.IsDuplicate)
                 {
                     IsDuplicate = true;
                     DuplicateMessage = fileResult.DuplicateMessage;
                 }
 
-                // Execute queries
                 var executionResult = await _databaseService.ExecuteQueriesAsync(
                     fileResult.Content,
-                    executeOnDb1 && Database1Connected,
-                    executeOnDb2 && Database2Connected
+                    selectedTargets
                 );
 
                 HasError = executionResult.HasError;
-                Message = $" File '{fileResult.FileName}' processed | Total Queries: {executionResult.TotalQueries}";
-
-                if (executionResult.Database1Results != null)
-                {
-                    Database1Results = executionResult.Database1Results;
-                }
-
-                if (executionResult.Database2Results != null)
-                {
-                    Database2Results = executionResult.Database2Results;
-                }
-
-                // Add warning for disconnected databases
-                if (!Database1Connected && executeOnDb1)
-                {
-                    Message += " <br/>  Database 1 is not connected - queries were not executed on it.";
-                }
-                if (!Database2Connected && executeOnDb2)
-                {
-                    Message += " <br/>  Database 2 is not connected - queries were not executed on it.";
-                }
+                Message = $"File '{fileResult.FileName}' processed | Total Queries: {executionResult.TotalQueries}";
+                DatabaseResults = executionResult.DatabaseResults;
 
                 _logger.LogInformation($"File processed successfully: {fileResult.FileName}");
             }
@@ -113,6 +107,63 @@ namespace form.Pages
                 Message = $" Fatal error: {ex.Message}";
                 _logger.LogError(ex, "Error processing file");
             }
+        }
+
+        private async Task LoadConfiguredDatabaseStatusesAsync()
+        {
+            ConfiguredDatabases.Clear();
+
+            foreach (var target in _databaseService.GetConfiguredTargets())
+            {
+                ConfiguredDatabases.Add(new DatabaseTargetStatus
+                {
+                    Target = target,
+                    Connected = await _databaseService.TestConnectionAsync(target.ConnectionString)
+                });
+            }
+        }
+
+        private List<DatabaseTarget> BuildCustomTargets(
+            string[] names,
+            string[] hosts,
+            int[] ports,
+            string[] databases,
+            string[] users,
+            string[] passwords)
+        {
+            var targets = new List<DatabaseTarget>();
+            var count = new[] { names.Length, hosts.Length, ports.Length, databases.Length, users.Length, passwords.Length }.Max();
+
+            for (var i = 0; i < count; i++)
+            {
+                var database = GetValue(databases, i);
+                var user = GetValue(users, i);
+
+                if (string.IsNullOrWhiteSpace(database) || string.IsNullOrWhiteSpace(user))
+                {
+                    continue;
+                }
+
+                targets.Add(_databaseService.CreateCustomTarget(
+                    GetValue(names, i),
+                    GetValue(hosts, i),
+                    GetIntValue(ports, i, 3306),
+                    database,
+                    user,
+                    GetValue(passwords, i)));
+            }
+
+            return targets;
+        }
+
+        private static string GetValue(string[] values, int index)
+        {
+            return index < values.Length ? values[index] : "";
+        }
+
+        private static int GetIntValue(int[] values, int index, int fallback)
+        {
+            return index < values.Length && values[index] > 0 ? values[index] : fallback;
         }
     }
 }

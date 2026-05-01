@@ -1,92 +1,102 @@
-﻿@page
+@page
 @model IndexModel
 @{
     ViewData["Title"] = "SQL File Executor";
 }
 
-<div class="container mt-5">
+<div class="container py-5">
     <div class="row">
-        <div class="col-lg-8 offset-lg-2">
-            <h1 class="mb-4">Database SQL File Executor</h1>
-
-            <!-- Database Status -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card @(Model.Database1Connected ? "border-success" : "border-danger")">
-                        <div class="card-body">
-                            <h5 class="card-title">Database 1 (Port 3306)</h5>
-                            <p class="card-text">
-                                Status: 
-                                @if (Model.Database1Connected)
-                                {
-                                    <span class="badge bg-success">Connected</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Disconnected</span>
-                                }
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card @(Model.Database2Connected ? "border-success" : "border-danger")">
-                        <div class="card-body">
-                            <h5 class="card-title">Database 2 (Port 3307)</h5>
-                            <p class="card-text">
-                                Status: 
-                                @if (Model.Database2Connected)
-                                {
-                                    <span class="badge bg-success">Connected</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Disconnected</span>
-                                }
-                            </p>
-                        </div>
-                    </div>
+        <div class="col-xl-10 offset-xl-1">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h1 class="mb-1">Database SQL File Executor</h1>
+                    <p class="text-muted mb-0">Upload one SQL file and run it on any configured or custom MySQL database.</p>
                 </div>
             </div>
 
-            <!-- File Upload Form -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Upload SQL File</h5>
+            <form method="post" enctype="multipart/form-data" id="sqlExecutorForm">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Databases</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 mb-3">
+                            @foreach (var database in Model.ConfiguredDatabases)
+                            {
+                                <div class="col-md-6">
+                                    <label class="database-option @(database.Connected ? "is-connected" : "is-disconnected")">
+                                        <input class="form-check-input" type="checkbox" name="selectedConnectionNames" value="@database.Target.Key" checked="@database.Connected" disabled="@(!database.Connected)">
+                                        <span class="database-option-body">
+                                            <span class="database-option-title">@database.Target.Name</span>
+                                            @if (database.Connected)
+                                            {
+                                                <span class="badge bg-success">Connected</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Disconnected</span>
+                                            }
+                                        </span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+
+                        @if (Model.CustomDatabases.Count > 0)
+                        {
+                            <div class="mb-3">
+                                <h6 class="mb-2">Custom database status</h6>
+                                <div class="row g-3">
+                                    @foreach (var database in Model.CustomDatabases)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="database-option @(database.Connected ? "is-connected" : "is-disconnected")">
+                                                <span class="database-option-body">
+                                                    <span class="database-option-title">@database.Target.Name</span>
+                                                    @if (database.Connected)
+                                                    {
+                                                        <span class="badge bg-success">Connected</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-danger">Disconnected</span>
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <div id="customDatabaseRows" class="d-grid gap-3"></div>
+
+                        <button type="button" class="btn btn-outline-primary mt-3" id="addDatabaseButton">
+                            Add database
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Upload SQL File</h5>
+                    </div>
+                    <div class="card-body">
                         <div class="mb-3">
                             <label for="fileInput" class="form-label">Select SQL or Text File:</label>
                             <input type="file" class="form-control" id="fileInput" name="fileUpload" accept=".sql,.txt" required>
                             <small class="form-text text-muted">Allowed formats: .sql, .txt (Max 5MB)</small>
                         </div>
 
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="db1Check" name="executeOnDb1" value="true" checked>
-                                <label class="form-check-label" for="db1Check">
-                                    Execute on Database 1 (Port 3306)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="db2Check" name="executeOnDb2" value="true" checked>
-                                <label class="form-check-label" for="db2Check">
-                                    Execute on Database 2 (Port 3307)
-                                </label>
-                            </div>
-                        </div>
-
                         <button type="submit" class="btn btn-primary btn-lg w-100">Upload & Execute</button>
-                    </form>
+                    </div>
                 </div>
-            </div>
+            </form>
 
-            <!-- Messages -->
             @if (!string.IsNullOrEmpty(Model.Message))
             {
                 <div class="alert @(Model.HasError ? "alert-danger" : "alert-success") alert-dismissible fade show" role="alert">
-                    @Html.Raw(Model.Message)
+                    @Model.Message
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
@@ -99,87 +109,42 @@
                 </div>
             }
 
-            <!-- Execution Results -->
-            @if (Model.Database1Results != null)
-            {
-                <div class="card mb-4 mt-4">
-                    <div class="card-header @(Model.Database1Results.Error != "" ? "bg-danger" : "bg-info") text-white">
-                        <h5 class="mb-0">@Model.Database1Results.DatabaseName</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (!string.IsNullOrEmpty(Model.Database1Results.Error))
-                        {
-                            <div class="alert alert-danger">
-                                <strong>Connection Error:</strong> @Model.Database1Results.Error
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <strong>Successful Queries:</strong>
-                                    <span class="badge bg-success">@Model.Database1Results.SuccessfulQueries</span>
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Failed Queries:</strong>
-                                    <span class="badge bg-danger">@Model.Database1Results.FailedQueries</span>
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Duplicate Errors:</strong>
-                                    <span class="badge bg-warning">@Model.Database1Results.DuplicateErrors</span>
-                                </div>
-                            </div>
-
-                            <h6>Query Details:</h6>
-                            <div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
-                                <ul class="list-unstyled">
-                                    @foreach (var detail in Model.Database1Results.Details)
-                                    {
-                                        <li>@Html.Raw(detail)</li>
-                                    }
-                                </ul>
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
-
-            @if (Model.Database2Results != null)
+            @foreach (var result in Model.DatabaseResults)
             {
                 <div class="card mb-4">
-                    <div class="card-header @(Model.Database2Results.Error != "" ? "bg-danger" : "bg-info") text-white">
-                        <h5 class="mb-0">@Model.Database2Results.DatabaseName</h5>
+                    <div class="card-header @(string.IsNullOrEmpty(result.Error) ? "bg-info" : "bg-danger") text-white">
+                        <h5 class="mb-0">@result.DatabaseName</h5>
                     </div>
                     <div class="card-body">
-                        @if (!string.IsNullOrEmpty(Model.Database2Results.Error))
+                        @if (!string.IsNullOrEmpty(result.Error))
                         {
                             <div class="alert alert-danger">
-                                <strong>Connection Error:</strong> @Model.Database2Results.Error
+                                <strong>Connection Error:</strong> @result.Error
                             </div>
                         }
                         else
                         {
-                            <div class="row mb-3">
-                                <div class="col-md-3">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
                                     <strong>Successful Queries:</strong>
-                                    <span class="badge bg-success">@Model.Database2Results.SuccessfulQueries</span>
+                                    <span class="badge bg-success">@result.SuccessfulQueries</span>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <strong>Failed Queries:</strong>
-                                    <span class="badge bg-danger">@Model.Database2Results.FailedQueries</span>
+                                    <span class="badge bg-danger">@result.FailedQueries</span>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <strong>Duplicate Errors:</strong>
-                                    <span class="badge bg-warning">@Model.Database2Results.DuplicateErrors</span>
+                                    <span class="badge bg-warning text-dark">@result.DuplicateErrors</span>
                                 </div>
                             </div>
 
                             <h6>Query Details:</h6>
-                            <div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
-                                <ul class="list-unstyled">
-                                    @foreach (var detail in Model.Database2Results.Details)
+                            <div class="bg-light p-3 rounded query-details">
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var detail in result.Details)
                                     {
-                                        <li>@Html.Raw(detail)</li>
+                                        <li>@detail</li>
                                     }
                                 </ul>
                             </div>
@@ -190,3 +155,62 @@
         </div>
     </div>
 </div>
+
+<template id="customDatabaseTemplate">
+    <div class="custom-database-row border rounded p-3">
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+            <h6 class="mb-0">New database</h6>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-database-button">Remove</button>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Display name</label>
+                <input class="form-control" name="customDisplayName" placeholder="Reports DB">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Host</label>
+                <input class="form-control" name="customHost" value="127.0.0.1" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Port</label>
+                <input class="form-control" type="number" name="customPort" value="3306" min="1" max="65535" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Database name</label>
+                <input class="form-control" name="customDatabase" placeholder="database_name" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">User</label>
+                <input class="form-control" name="customUser" value="root" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Password</label>
+                <input class="form-control" type="password" name="customPassword">
+            </div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <script>
+        (() => {
+            const addButton = document.querySelector('#addDatabaseButton');
+            const rows = document.querySelector('#customDatabaseRows');
+            const template = document.querySelector('#customDatabaseTemplate');
+
+            addButton?.addEventListener('click', () => {
+                const row = template.content.firstElementChild.cloneNode(true);
+                rows.appendChild(row);
+                row.querySelector('input[name="customDisplayName"]')?.focus();
+            });
+
+            rows?.addEventListener('click', (event) => {
+                const button = event.target.closest('.remove-database-button');
+
+                if (button) {
+                    button.closest('.custom-database-row')?.remove();
+                }
+            });
+        })();
+    </script>
+}

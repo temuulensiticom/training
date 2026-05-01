@@ -14,7 +14,6 @@ namespace form.Services
             _logger = logger;
             _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
 
-            // Create uploads folder if it doesn't exist
             if (!Directory.Exists(_uploadFolder))
             {
                 Directory.CreateDirectory(_uploadFolder);
@@ -27,7 +26,6 @@ namespace form.Services
 
             try
             {
-                // Validate file
                 var validation = ValidateFile(file);
                 if (!validation.IsValid)
                 {
@@ -36,7 +34,6 @@ namespace form.Services
                     return result;
                 }
 
-                // Check for duplicate file
                 var fileName = Path.GetFileName(file.FileName);
                 var filePath = Path.Combine(_uploadFolder, fileName);
                 var fileIndex = 1;
@@ -52,7 +49,6 @@ namespace form.Services
                     result.DuplicateMessage = $"File name already exists. Saved as: {fileName}";
                 }
 
-                // Save file
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
@@ -60,7 +56,6 @@ namespace form.Services
 
                 _logger.LogInformation($"File uploaded successfully: {fileName}");
 
-                // Read file content
                 using (var reader = new StreamReader(filePath, Encoding.UTF8))
                 {
                     result.Content = await reader.ReadToEndAsync();
