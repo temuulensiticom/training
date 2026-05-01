@@ -1,0 +1,5 @@
+fiscus bug 
+Hүүр >>Санхүүжилт/шинэ/ >>Санхүүжилтийн даалгавар https://fiscus.stg.mn/FundingN/Index this screen main content have } this is shows
+ https://fiscus.stg.mn/Discount/IndexDiscount this router have wrog that when i click Борлуулалт then go хаямдрал header of "Hүүр>>Хямдрал урамшуулалтай хөрөнгийн жагсаалт" looks this but orgin is must be "Hүүр>> Борлуулалт >>Хямдрал урамшуулалтай хөрөнгийн жагсаалт" 
+https://fiscus.stg.mn/Sale/IndexSale "Hүүр>>Борлуулалт" looks this but this is must be "Hүүр >> Борлуулалт >> Борлуулалтын жагсаалт "
+https://fiscus.stg.mn/SalesInvoicePayment/Index "Hүүр >> Борлуулалт >>Борлуулалтын нэхэмжлэх>>Борлуулалтын нэхэмжлэхийн тооцоо" looks wrong that must be Hүүр >> Борлуулалт >>Борлуулалтын нэхэмжлэхийн тооцоо"

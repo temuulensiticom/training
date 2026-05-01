@@ -1,0 +1,37 @@
+## Directories
+bin/
+obj/
+.vs/
+.vscode/
+
+## Files
+*.user
+*.suo
+*.cache
+*.log
+.DS_Store
+
+## IDE
+.vscode/
+.idea/
+
+## Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+## Build output
+dist/
+build/
+
+## Uploads folder (but not the folder itself)
+uploads/*
+!uploads/.gitkeep
+
+## Environment files (if using .env)
+.env
+.env.local
+
+## Runtime files
+*.db
+*.sqlite
