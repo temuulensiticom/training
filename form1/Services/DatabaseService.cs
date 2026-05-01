@@ -348,8 +348,9 @@ namespace form.Services
                     return true;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Database {DatabaseNumber} connection test failed", databaseNumber);
                 return false;
             }
         }

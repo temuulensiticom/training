@@ -23,6 +23,8 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "environmentVariables": {
+        "ConnectionStrings__Database1": "Server=host.docker.internal;Port=3306;Database=db1;User ID=root;Password=@passmysql;ConnectionProtocol=Tcp;SslMode=None;AllowPublicKeyRetrieval=True;Connection Timeout=10;",
+        "ConnectionStrings__Database2": "Server=host.docker.internal;Port=3307;Database=db2;User ID=root;Password=;ConnectionProtocol=Tcp;SslMode=None;AllowPublicKeyRetrieval=True;Connection Timeout=10;",
         "ASPNETCORE_HTTPS_PORTS": "8081",
         "ASPNETCORE_HTTP_PORTS": "8080"
       },
